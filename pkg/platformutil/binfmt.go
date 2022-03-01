@@ -48,6 +48,8 @@ func canExecProbably(s string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	fmt.Println("ssd")
+	fmt.Printf("p ki value: %v",p)
 	if platforms.Default().Match(p) {
 		return true, nil
 	}
@@ -66,6 +68,7 @@ func canExecProbably(s string) (bool, error) {
 			}
 		}
 	}
+	fmt.Println("kuch nahi hua")
 	return false, nil
 }
 
@@ -73,6 +76,7 @@ func CanExecProbably(ss ...string) (bool, error) {
 	for _, s := range ss {
 		ok, err := canExecProbably(s)
 		if err != nil {
+			fmt.Printf("roshan err %s",err.Error())
 			return false, err
 		}
 		if !ok {

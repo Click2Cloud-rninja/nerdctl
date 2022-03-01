@@ -110,21 +110,72 @@ func ProcessFlagV(s string, volStore volumestore.VolumeStore) (*Processed, error
 			return nil, err
 		}
 		res.Opts = append(res.Opts, specOpts...)
+	case 4:
+		res.Type = Bind
+		fmt.Println("step-0")
+		src, dst = split[0]+":"+split[1], split[2]+":"+split[3]
+		fmt.Println("step-1")
+		if !strings.Contains(src, "\\") {
+			fmt.Printf("step-2")
+			// assume src is a volume name
+			vol, err := volStore.Get(src)
+			if err != nil {
+				if errors.Is(err, errdefs.ErrNotFound) {
+					vol, err = volStore.Create(src, nil)
+					if err != nil {
+						return nil, err
+					}
+				} else {
+					return nil, err
+				}
+			}
+			// src is now full path
+			src = vol.Mountpoint
+			res.Type = Volume
+		}
+		fmt.Println("step-3")
+		if !filepath.IsAbs(src) {
+			logrus.Warnf("expected an absolute path, got a relative path %q (allowed for nerdctl, but disallowed for Docker, so unrecommended)", src)
+			var err error
+			src, err = filepath.Abs(src)
+			if err != nil {
+				return nil, err
+			}
+		}
+		fmt.Println("step-4")
+		if !filepath.IsAbs(dst) {
+			return nil, fmt.Errorf("expected an absolute path, got %q", dst)
+		}
+		rawOpts := ""
+		if len(split) == 3 {
+			rawOpts = split[2]
+		}
+
+		// always call parseVolumeOptions for bind mount to allow the parser to add some default options
+		var err error
+		var specOpts []oci.SpecOpts
+		options, specOpts, err = parseVolumeOptions(res.Type, src, rawOpts)
+		if err != nil {
+			return nil, err
+		}
+		res.Opts = append(res.Opts, specOpts...)
 	default:
 		return nil, fmt.Errorf("failed to parse %q", s)
 	}
-
+	fmt.Println("step-5")
 	fstype := "nullfs"
 	if runtime.GOOS != "freebsd" {
-		fstype = "none"
+		fstype = ""
 		options = append(options, "rbind")
 	}
+	src, dst = split[0]+":"+split[1], split[2]+"\\"+split[3]
 	res.Mount = specs.Mount{
 		Type:        fstype,
 		Source:      src,
 		Destination: dst,
 		Options:     options,
 	}
+	fmt.Printf("step-6")
 	if sys.RunningInUserNS() {
 		unpriv, err := getUnprivilegedMountFlags(src)
 		if err != nil {
@@ -132,5 +183,8 @@ func ProcessFlagV(s string, volStore volumestore.VolumeStore) (*Processed, error
 		}
 		res.Mount.Options = strutil.DedupeStrSlice(append(res.Mount.Options, unpriv...))
 	}
+
+	fmt.Println("step-7")
+
 	return &res, nil
 }

@@ -19,6 +19,7 @@ package taskutil
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/url"
 	"os"
@@ -33,13 +34,16 @@ func NewTask(ctx context.Context, client *containerd.Client, container container
 	stdinC := &StdinCloser{
 		Stdin: os.Stdin,
 	}
+
 	var ioCreator cio.Creator
 	if flagT {
+		fmt.Println("step-24a")
 		if con == nil {
 			return nil, errors.New("got nil con with flagT=true")
 		}
 		ioCreator = cio.NewCreator(cio.WithStreams(con, con, nil), cio.WithTerminal)
 	} else if flagD && logURI != "" {
+		fmt.Println("step-24b")
 		// TODO: support logURI for `nerdctl run -it`
 		u, err := url.Parse(logURI)
 		if err != nil {
@@ -53,13 +57,17 @@ func NewTask(ctx context.Context, client *containerd.Client, container container
 		}
 		ioCreator = cio.NewCreator(cio.WithStreams(in, os.Stdout, os.Stderr))
 	}
+	fmt.Println("step-24c")
 	t, err := container.NewTask(ctx, ioCreator)
 	if err != nil {
+
+		fmt.Printf("step-24cer %s",err.Error())
 		return nil, err
 	}
 	stdinC.Closer = func() {
 		t.CloseIO(ctx, containerd.WithStdinCloser)
 	}
+	fmt.Println("step-24csder")
 	return t, nil
 }
 

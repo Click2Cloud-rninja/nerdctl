@@ -84,11 +84,13 @@ func parseMountFlags(cmd *cobra.Command, volStore volumestore.VolumeStore) ([]*m
 		for _, v := range strutil.DedupeStrSlice(flagVSlice) {
 			x, err := mountutil.ProcessFlagV(v, volStore)
 			if err != nil {
+				fmt.Println("step-error1")
 				return nil, err
 			}
 			parsed = append(parsed, x)
 		}
 	}
+	fmt.Println("step-8")
 
 	// tmpfs needs to be StringArray, not StringSlice, to prevent "/foo:size=64m,exec" from being split to {"/foo:size=64m", "exec"}
 	if tmpfsSlice, err := cmd.Flags().GetStringArray("tmpfs"); err != nil {
@@ -114,7 +116,9 @@ func parseMountFlags(cmd *cobra.Command, volStore volumestore.VolumeStore) ([]*m
 			parsed = append(parsed, x)
 		}
 	}
-
+	fmt.Println("step-10")
+	fmt.Printf("step-10new err %v", parsed[0].Mount.Destination)
+	fmt.Println("step-10qw")
 	return parsed, nil
 }
 
@@ -205,6 +209,7 @@ func generateMountOpts(cmd *cobra.Command, ctx context.Context, client *containe
 	}
 
 	if parsed, err := parseMountFlags(cmd, volStore); err != nil {
+		fmt.Println("step-10err")
 		return nil, nil, err
 	} else if len(parsed) > 0 {
 		ociMounts := make([]specs.Mount, len(parsed))
@@ -230,7 +235,7 @@ func generateMountOpts(cmd *cobra.Command, ctx context.Context, client *containe
 		}
 		userMounts = append(userMounts, ociMounts...)
 	}
-
+	fmt.Println("step-11")
 	// imageVolumes are defined in Dockerfile "VOLUME" instruction
 	for imgVolRaw := range imageVolumes {
 		imgVol := filepath.Clean(imgVolRaw)
@@ -247,6 +252,7 @@ func generateMountOpts(cmd *cobra.Command, ctx context.Context, client *containe
 			anonVolName, imgVolRaw)
 		anonVol, err := volStore.Create(anonVolName, []string{})
 		if err != nil {
+			fmt.Println("step-12err")
 			return nil, nil, err
 		}
 
@@ -261,7 +267,7 @@ func generateMountOpts(cmd *cobra.Command, ctx context.Context, client *containe
 		}
 
 		m := specs.Mount{
-			Type:        "none",
+			Type:        "",
 			Source:      anonVol.Mountpoint,
 			Destination: imgVol,
 			Options:     []string{"rbind"},
@@ -271,6 +277,7 @@ func generateMountOpts(cmd *cobra.Command, ctx context.Context, client *containe
 	}
 
 	opts = append(opts, withMounts(userMounts))
+	fmt.Println("step-12")
 	return opts, anonVolumes, nil
 }
 

@@ -81,7 +81,10 @@ func newClientWithPlatform(cmd *cobra.Command, platform string, clientOpts ...co
 		}
 		platformM := platforms.Only(platformParsed)
 		clientOpts = append(clientOpts, containerd.WithDefaultPlatform(platformM))
+		fmt.Printf("step context %v", clientOpts)
 	}
+	fmt.Printf("step context %v", clientOpts)
+	fmt.Printf("platform %s", platform)
 	return newClient(cmd, clientOpts...)
 }
 

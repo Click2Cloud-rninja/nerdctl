@@ -235,6 +235,7 @@ func runAction(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	fmt.Printf("platform is %s", platform)
 	client, ctx, cancel, err := newClientWithPlatform(cmd, platform)
 	if err != nil {
 		return err
@@ -257,7 +258,7 @@ func runAction(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
+	fmt.Println("step-21")
 	lab, err := container.Labels(ctx)
 	if err != nil {
 		return err
@@ -282,7 +283,7 @@ func runAction(cmd *cobra.Command, args []string) error {
 			}
 		}()
 	}
-
+	fmt.Println("step-22")
 	var con console.Console
 	if flagT {
 		con = console.Current()
@@ -291,9 +292,10 @@ func runAction(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	}
-
+	fmt.Println("step-24")
 	task, err := taskutil.NewTask(ctx, client, container, flagI, flagT, flagD, con, logURI)
 	if err != nil {
+		fmt.Println("step-24aerrer")
 		return err
 	}
 	var statusC <-chan containerd.ExitStatus
@@ -327,6 +329,7 @@ func runAction(cmd *cobra.Command, args []string) error {
 		sigc := commands.ForwardAllSignals(ctx, task)
 		defer commands.StopCatch(sigc)
 	}
+	fmt.Println("step-25")
 	status := <-statusC
 	code, _, err := status.Result()
 	if err != nil {
@@ -337,6 +340,7 @@ func runAction(cmd *cobra.Command, args []string) error {
 			exitCode: int(code),
 		}
 	}
+	fmt.Println("step-26")
 	return nil
 }
 
@@ -449,6 +453,7 @@ func createContainer(cmd *cobra.Command, ctx context.Context, client *containerd
 	} else {
 		opts = append(opts, mountOpts...)
 	}
+	fmt.Println("step-13")
 
 	var logURI string
 	if flagD {
@@ -458,7 +463,7 @@ func createContainer(cmd *cobra.Command, ctx context.Context, client *containerd
 			logURI = lu.String()
 		}
 	}
-
+	fmt.Println("step-14")
 	restartValue, err := cmd.Flags().GetString("restart")
 	if err != nil {
 		return nil, "", nil, err
@@ -474,7 +479,7 @@ func createContainer(cmd *cobra.Command, ctx context.Context, client *containerd
 		return nil, "", nil, err
 	}
 	opts = append(opts, netOpts...)
-
+	fmt.Println("step-15")
 	hostname := id[0:12]
 	customHostname, err := cmd.Flags().GetString("hostname")
 	if err != nil {
@@ -492,7 +497,7 @@ func createContainer(cmd *cobra.Command, ctx context.Context, client *containerd
 		}
 		opts = append(opts, withCustomEtcHostname(hostnamePath))
 	}
-
+	fmt.Println("step-16")
 	hookOpt, err := withNerdctlOCIHook(cmd, id, stateDir)
 	if err != nil {
 		return nil, "", nil, err
@@ -516,7 +521,7 @@ func createContainer(cmd *cobra.Command, ctx context.Context, client *containerd
 		return nil, "", nil, err
 	}
 	cOpts = append(cOpts, lCOpts...)
-
+	fmt.Println("step-17")
 	var containerNameStore namestore.NameStore
 	name, err := cmd.Flags().GetString("name")
 	if err != nil {
@@ -547,7 +552,7 @@ func createContainer(cmd *cobra.Command, ctx context.Context, client *containerd
 			return nil, "", nil, err
 		}
 	}
-
+	fmt.Println("step-18")
 	extraHosts, err := cmd.Flags().GetStringSlice("add-host")
 	if err != nil {
 		return nil, "", nil, err
@@ -570,6 +575,7 @@ func createContainer(cmd *cobra.Command, ctx context.Context, client *containerd
 	if err != nil {
 		return nil, "", nil, err
 	}
+	fmt.Println("step-19")
 	return container, dataStore, containerNameStore, nil
 }
 
